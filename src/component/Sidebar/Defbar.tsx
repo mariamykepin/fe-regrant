@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from "react";
 import "tailwindcss";
 
 interface SubItem {
@@ -10,20 +10,12 @@ interface MenuItem {
   label: string;
   href?: string;
   subItems?: SubItem[];
-  icon?: string; // Tambahkan properti icon
+  icon?: string;
 }
 
 const menuItems: MenuItem[] = [
-  {
-    label: "Dashboard",
-    href: "../App.tsx", // Ganti dengan path yang sesuai
-    icon: "fa-solid fa-chart-line", // Contoh ikon Font Awesome
-  },
-  {
-    label: "Messages",
-    href: "/messages",
-    icon: "fa-solid fa-message",
-  },
+  { label: "Dashboard", href: "../App.tsx", icon: "fa-solid fa-chart-line" },
+  { label: "Messages", href: "/messages", icon: "fa-solid fa-message" },
   {
     label: "Deals Log",
     subItems: [
@@ -32,15 +24,22 @@ const menuItems: MenuItem[] = [
     ],
     icon: "fa-solid fa-file-contract",
   },
-  {
-    label: "Your Bookmarks",
-    href: "/bookmarks",
-    icon: "fa-solid fa-bookmark",
-  },
+  { label: "Your Bookmarks", href: "/bookmarks", icon: "fa-solid fa-bookmark" },
 ];
 
 const Defbar = () => {
   const [openSubmenus, setOpenSubmenus] = useState<Record<string, boolean>>({});
+  const [isOpen, setIsOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkScreenSize = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+    checkScreenSize();
+    window.addEventListener("resize", checkScreenSize);
+    return () => window.removeEventListener("resize", checkScreenSize);
+  }, []);
 
   const toggleSubmenu = (label: string) => {
     setOpenSubmenus((prev) => ({
@@ -50,52 +49,75 @@ const Defbar = () => {
   };
 
   return (
-    <aside className="bar w-64 bg-gray-100 p-4 flex flex-col h-screen top-0 fixed shadow-md"> {/* Tambahkan h-screen */}
-      <div className="mb-8 flex items-center justify-center border-b border-gray-300"> {/* Center logo */}
-        {/* Logo atau judul aplikasi */}
-        <span className="text-2xl font-bold p-3">Regrant</span>
-      </div>
-      <ul className="flex-grow overflow-auto mt-5"> {/* Gunakan flex-grow untuk mengisi ruang */}
-        {menuItems.map((item, index) => (
-          <li key={index} className="mb-5"> {/* Kurangi margin bottom */}
-            {item.subItems ? (
-              <div>
-                <button
-                  onClick={() => toggleSubmenu(item.label)}
-                  className="butt flex items-center p-0 px-0 py-0 w-full text-left text-blue-500 hover:bg-gray-200 rounded-lg transition" // Button full width
-                >
-                  <i className={`${item.icon} mr-2`}></i> {/* Ikon */}
+    <div className={`flex transition-all ${isOpen && !isMobile ? "ml-64" : ""}`}>
+      {/* Tombol Sidebar */}
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="fixed top-4 left-4 bg-gray-800 text-white p-2 rounded-lg shadow-lg z-50"
+      >
+        <i className="fas fa-bars text-lg"></i>
+      </button>
+
+      {/* Sidebar */}
+      <div
+        className={`fixed top-0 left-0 bg-white w-64 h-full shadow-lg transform transition-transform ${
+          isOpen ? "translate-x-0" : "-translate-x-full"
+        } z-40`}
+      >
+        {/* Header */}
+        <div className="p-4 text-center text-2xl font-bold border-b">Regrant</div>
+
+        {/* Menu Items */}
+        <ul className="p-4">
+          {menuItems.map((item, index) => (
+            <li key={index} className="mb-5">
+              {item.subItems ? (
+                <div>
+                  <button
+                    onClick={() => toggleSubmenu(item.label)}
+                    className="flex items-center w-full text-left text-blue-500 hover:bg-gray-100 rounded-md px-2 py-2 text-sm"
+                  >
+                    <i className={`${item.icon} text-xs mr-2`}></i>
+                    {item.label}
+                    <i className={`fas fa-chevron-down ml-auto text-xs ${openSubmenus[item.label] ? "rotate-180" : ""}`}></i>
+                  </button>
+                  {openSubmenus[item.label] && (
+                    <ul className="ml-4 mt-1 text-xs">
+                      {item.subItems.map((subItem, subIndex) => (
+                        <li key={subIndex} className="mb-1">
+                          <a href={subItem.href} className="block text-gray-700 hover:text-blue-500">
+                            {subItem.label}
+                          </a>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              ) : (
+                <a href={item.href} className="flex items-center text-gray-700 hover:text-blue-500 px-2 py-2 text-sm">
+                  <i className={`${item.icon} text-xs mr-2`}></i>
                   {item.label}
-                  <i className={`fas fa-chevron-down ml-auto transition-transform ${openSubmenus[item.label] ? 'rotate-180' : ''}`}></i> {/* Ikon dropdown */}
-                </button>
-                {openSubmenus[item.label] && (
-                  <ul className="ml-15 mt-4">
-                    {item.subItems.map((subItem, subIndex) => (
-                      <li key={subIndex} className="mb-3">
-                        <a href={subItem.href} className="block"> {/* Link block */}
-                          {subItem.label}
-                        </a>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </div>
-            ) : (
-              <a href={item.href} className="flex items-center">
-                <i className={`${item.icon} mr-2`}></i> {/* Ikon */}
-                {item.label}
-              </a>
-            )}
-          </li>
-        ))}
-      </ul>
-      <div className="mt-auto border-t pt-4"> {/* Footer di bagian bawah */}
-        <div className="flex items-center">
+                </a>
+              )}
+            </li>
+          ))}
+        </ul>
+
+        {/* Footer */}
+        <div className="absolute bottom-4 left-4 flex items-center">
           <img src="avatar.jpg" alt="Avatar" className="w-8 h-8 rounded-full mr-2" />
           <span>Spidervape</span>
         </div>
       </div>
-    </aside>
+
+      {/* Overlay untuk Desktop & Mobile */}
+      {isOpen && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-10 z-30"
+          onClick={() => setIsOpen(false)}
+        ></div>
+      )}
+    </div>
   );
 };
 
