@@ -15,7 +15,7 @@ interface Product {
     onBorrow: (productId: number) => void;
   }
 
-const product: React.FC<Props> = ({ products, onBorrow }) => {
+const products: React.FC<Props> = ({ products, onBorrow }) => {
   return (
     <div className="grid grid-cols-4 gap-6">
       {products.map((product) => (
@@ -37,4 +37,4 @@ const product: React.FC<Props> = ({ products, onBorrow }) => {
   );
 };
 
-export default product;
+export default products;
